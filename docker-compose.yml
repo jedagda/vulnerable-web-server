@@ -9,11 +9,17 @@ services:
                         - type: volume
                           source: public_html
                           target: ${WEB_DESTINATION_PATH}
+                environment:
+                        - DB_NAME=${DB_NAME}
+                        - DB_USER=${DB_USER}
+                        - DB_PASSWORD=${DB_PASSWORD}
+                        - DB_HOST=${DB_HOST}
+
         apache: 
                 build: './apache/'
                 depends_on: 
                         - php 
-                        - mariadb
+                        - mysqldb
                 networks: 
                         - frontend
                         - backend
@@ -22,23 +28,36 @@ services:
                 volumes: 
                         - type: volume
                           source: public_html
-                          target: ${WEB_DESTINATION_PATH}  
+                          target: ${WEB_DESTINATION_PATH}
+ 
 
-        mariadb: 
-                image: hypriot/rpi-mysql
+        mysqldb: 
+                build: './mysqldb/'
+                volumes:
+                        - type: volume
+                          source: db_data
+                          target: ${DB_DESTINATION_PATH}
+
+
                 networks: 
                         - backend
                 environment:
-                        - MYSQL_DATABASE=wordpress
-                        - MYSQL_USER=user
-                        - MYSQL_PASSWORD=password
-                        - MYSQL_ROOT_PASSWORD=rootpassword
+                        - MYSQL_DATABASE=${DB_NAME}
+                        - MYSQL_USER=${DB_USER}
+                        - MYSQL_PASSWORD=${DB_PASSWORD}
+                        - MYSQL_ROOT_PASSWORD=${DB_RT_PASSWORD}
 volumes: 
         public_html:
                 driver: local
                 driver_opts:
                         type: none 
-                        device: ./public_html
+                        device: ${WEB_APP_PATH}
+                        o: 'bind'
+        db_data: 
+                driver: local
+                driver_opts:
+                        type: none
+                        device: ${DB_PATH}
                         o: 'bind'
 networks: 
        frontend:
